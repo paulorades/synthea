@@ -125,6 +125,7 @@ module Synthea
 
       class Delay < State
         attr_accessor :range, :exact
+        attr_reader :expiration
 
         required_field or: [:range, :exact]
 

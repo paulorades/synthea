@@ -148,6 +148,13 @@ namespace :synthea do
     end
   end
 
+  task :trace_metrics, [:filename, :population] do |_t, args|
+    args.with_defaults(population: 1000)
+
+    Synthea::Config.population.generate_fingerprints = false # skip fingerprints because they're really slow
+    Synthea::Tasks::Metrics.run_single_module(args.filename, population: args.population.to_i)
+  end
+
   # This task requires CSV data downloaded from the US Census Bureau
   # and placed into a folder called `resources`.
   # One file contains town population estimates, another file contains

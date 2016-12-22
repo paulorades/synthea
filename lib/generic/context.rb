@@ -1,19 +1,22 @@
 module Synthea
   module Generic
     class Context
-      attr_reader :config, :current_state, :history, :logged
+      attr_reader :config, :current_state, :history, :logged, :transition_counts
 
       def initialize(config)
         @config = config
         @name = @config['name']
         @history = []
         @current_state = create_state('Initial')
+        @transition_counts = Hash.new { |h, k| h[k] = Hash.new { |ih, ik| ih[ik] = 0 } }
       end
 
       def run(time, entity)
         # if @current_state.run returns true, it means we should progress to the next state
         while @current_state.run(time, entity)
           next_state = self.next(time, entity)
+
+          @transition_counts[@current_state.name][next_state] += 1
 
           if @current_state.name == next_state
             # looped from a state back to itself, so for perf reasons (memory usage)
