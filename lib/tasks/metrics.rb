@@ -26,7 +26,6 @@ module Synthea
         population.times do |i|
           person = Synthea::Person.new
 
-          
           person_options.each { |k, v| person[k] = v }
 
           context = Synthea::Generic::Context.new(module_json)
@@ -46,37 +45,12 @@ module Synthea
             date = new_date
           end
 
-          record_stats(context, stats)
+          record_stats(context, stats, date)
         end
 
         puts "Completed #{population} population in #{Time.now - start_timestamp}"
         
-        stats.each do |state, state_stats|
-          puts "#{state}:"
-          puts " Total times entered: #{state_stats[:entered]} (does not include any transitions directly back in)"
-          puts " Population that ever hit this state: #{state_stats[:population]} (#{(100.0 * state_stats[:population] / population).round(2)} %)"
-          puts " Average # of hits per total population: #{(state_stats[:entered].to_f / population).round(2)}"
-          puts " Average # of hits per person that ever hit state: #{(state_stats[:entered].to_f / state_stats[:population]).round(2)}"
-          puts " Population currently in state: #{state_stats[:current]} ( #{(100.0 * state_stats[:current] / population).round(2)} %)"
-          # binding.pry
-          state_type = module_json['states'][state]['type']
-          if %w(Guard Delay).include?(state_type)
-            puts " Total duration: #{duration(state_stats[:duration])}"
-            puts " Average duration per time entered: #{duration(state_stats[:duration] / state_stats[:entered])}"
-            puts " Average duration per person that ever entered state: #{duration(state_stats[:duration] / state_stats[:population])}"
-            # puts " Average duration per entire population: #{duration(state_stats[:duration] / population)}"
-          elsif state_type == 'Encounter' && module_json['states'][state]['wellness']
-            puts ' (duration metrics for wellness encounter omitted)'
-          end
-          unless state_stats[:destinations].empty?
-            puts " Transitioned to:"
-            total_transitions = state_stats[:destinations].values.sum
-            state_stats[:destinations].each do |to_state, count|
-              puts " --> #{to_state} : #{count} = #{(100.0 * count.to_f / total_transitions.to_f).round(2)}%"
-            end
-          end
-          puts ''
-        end
+        stats.each { |state, state_stats| print_stats(state, state_stats, module_json, population) }
 
         unreached = module_json['states'].keys - stats.keys
         unreached.each do |state|
@@ -84,19 +58,47 @@ module Synthea
         end
       end
 
-      def self.record_stats(context, stats)
+      def self.record_stats(context, stats, end_date)
         context.history << context.current_state
-        context.history.each { |s| count_state_stats(s, stats[s.name], date) }
+        context.history.each { |s| count_state_stats(s, stats[s.name], end_date) }
         context.history.collect(&:name).uniq.each { |n| stats[n][:population] += 1 } # count this person once for each state they hit
         stats[context.current_state.name][:current] += 1 # count the state they are currently in
         context.transition_counts.each do |from_state, destinations|
           destinations.each do |to_state, count|
-            # binding.pry
             stats[from_state][:destinations][to_state] += count
           end
         end
       end
 
+      def self.print_stats(state, state_stats, module_json, population)
+        puts "#{state}:"
+        puts " Total times entered: #{state_stats[:entered]} (does not include transitions looping directly back in)"
+        puts " Population that ever hit this state: #{state_stats[:population]} (#{ percent(state_stats[:population], population) } %)"
+        puts " Average # of hits per total population: #{(state_stats[:entered].to_f / population).round(2)}"
+        puts " Average # of hits per person that ever hit state: #{(state_stats[:entered].to_f / state_stats[:population]).round(2)}"
+        puts " Population currently in state: #{state_stats[:current]} ( #{ percent(state_stats[:current],population) } %)"
+        state_type = module_json['states'][state]['type']
+        if %w(Guard Delay).include?(state_type)
+          puts " Total duration: #{duration(state_stats[:duration])}"
+          puts " Average duration per time entered: #{duration(state_stats[:duration] / state_stats[:entered])}"
+          puts " Average duration per person that ever entered state: #{duration(state_stats[:duration] / state_stats[:population])}"
+          # puts " Average duration per entire population: #{duration(state_stats[:duration] / population)}"
+        elsif state_type == 'Encounter' && module_json['states'][state]['wellness']
+          puts ' (duration metrics for wellness encounter omitted)'
+        end
+        unless state_stats[:destinations].empty?
+          puts " Transitioned to:"
+          total_transitions = state_stats[:destinations].values.sum
+          state_stats[:destinations].each do |to_state, count|
+            puts " --> #{to_state} : #{count} = #{ percent(count.to_f, total_transitions.to_f) }%"
+          end
+        end
+        puts ''
+      end
+
+      def self.percent(num, denom, decimal_places = 2)
+        (100.0 * num / denom).round(decimal_places)
+      end
 
       def self.duration(time)
         # augmented version of http://stackoverflow.com/a/1679963

@@ -148,6 +148,7 @@ namespace :synthea do
     end
   end
 
+  desc 'trace metrics for a single module'
   task :trace_metrics, [:filename, :population] do |_t, args|
     args.with_defaults(population: 1000)
 
