@@ -10,7 +10,7 @@ module Synthea
       # We represent symptoms as a hash of hashes; the first level key is the symptom name (ie :fatigue), the
       # second level key is the symptom cause (ie :diabetes), and the value is an integer ranging from 1-100
       # indicating severity; symptoms should only be accessed via the symptom API defined below
-      @symptoms = Hash.new { |h, k| h[k] = {} }
+      @symptoms = {}
     end
 
     def [](name)
@@ -58,6 +58,7 @@ module Synthea
     # Set value for a symptom, providing cause (ie :diabetes), type (ie :fatigue), and value ranging from 0-100
     def set_symptom_value(cause, type, value)
       raise 'Symptom value out of range' if value < 0 || value > 100
+      @symptoms[type] = {} unless @symptoms[type]
       @symptoms[type][cause] = value
     end
 

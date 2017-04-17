@@ -90,7 +90,7 @@ module Synthea
           # identifiers
           entity[:identifier_ssn] = "999-#{rand(10..99)}-#{rand(1000..9999)}"
 
-          entity[:med_changes] = Hash.new { |hsh, key| hsh[key] = [] }
+          entity[:med_changes] = Hash.new([])
           choose_socioeconomic_values(entity)
         end
       end
@@ -201,7 +201,7 @@ module Synthea
                     Synthea::Config.metabolic.basic_panel.creatinine_clearance.normal.male
                   end
                 end
-        creatinine_clearance = rand(range.first..range.last)
+        creatinine_clearance = rand(range.first..range.last).to_f
         entity.set_vital_sign(:egfr, creatinine_clearance, 'mL/min/{1.73_m2}')
 
         creatinine = begin
@@ -249,9 +249,9 @@ module Synthea
         triglycerides = Synthea::Config.metabolic.lipid_panel.triglycerides
         hdl = Synthea::Config.metabolic.lipid_panel.hdl
 
-        entity.set_vital_sign(:total_cholesterol, rand(cholesterol[index]..cholesterol[index + 1]), 'mg/dL')
-        entity.set_vital_sign(:triglycerides, rand(triglycerides[index]..triglycerides[index + 1]), 'mg/dL')
-        entity.set_vital_sign(:hdl, rand(hdl[index + 1]..hdl[index]), 'mg/dL')
+        entity.set_vital_sign(:total_cholesterol, rand(cholesterol[index]..cholesterol[index + 1]).to_f, 'mg/dL')
+        entity.set_vital_sign(:triglycerides, rand(triglycerides[index]..triglycerides[index + 1]).to_f, 'mg/dL')
+        entity.set_vital_sign(:hdl, rand(hdl[index + 1]..hdl[index]).to_f, 'mg/dL')
 
         ldl = entity.get_vital_sign_value(:total_cholesterol) - entity.get_vital_sign_value(:hdl) - (0.2 * entity.get_vital_sign_value(:triglycerides))
         entity.set_vital_sign(:ldl, ldl.to_i, 'mg/dL')
@@ -259,22 +259,22 @@ module Synthea
         # calculate the components of a metabolic panel and associated observations
         normal = Synthea::Config.metabolic.basic_panel.normal
         metabolic_panel = {
-          urea_nitrogen: rand(normal.urea_nitrogen.first..normal.urea_nitrogen.last),
-          creatinine: rand(normal.creatinine.first..normal.creatinine.last),
-          calcium: rand(normal.calcium.first..normal.calcium.last)
+          urea_nitrogen: rand(normal.urea_nitrogen.first..normal.urea_nitrogen.last).to_f,
+          creatinine: rand(normal.creatinine.first..normal.creatinine.last).to_f,
+          calcium: rand(normal.calcium.first..normal.calcium.last).to_f
         }
 
         electrolytes_panel = {
-          chloride: rand(normal.chloride.first..normal.chloride.last),
-          potassium: rand(normal.potassium.first..normal.potassium.last),
-          carbon_dioxide: rand(normal.co2.first..normal.co2.last),
-          sodium: rand(normal.sodium.first..normal.sodium.last)
+          chloride: rand(normal.chloride.first..normal.chloride.last).to_f,
+          potassium: rand(normal.potassium.first..normal.potassium.last).to_f,
+          carbon_dioxide: rand(normal.co2.first..normal.co2.last).to_f,
+          sodium: rand(normal.sodium.first..normal.sodium.last).to_f
         }
 
         # calculate glucose out of the normal
         glucose = Synthea::Config.metabolic.basic_panel.glucose
         index = 2 if index > 2
-        metabolic_panel[:glucose] = rand(glucose[index]..glucose[index + 1])
+        metabolic_panel[:glucose] = rand(glucose[index]..glucose[index + 1]).to_f
         # calculate creatine values
         range = nil
         if entity[:gender] && entity[:gender] == 'M'
@@ -282,14 +282,14 @@ module Synthea
         else
           range = Synthea::Config.metabolic.basic_panel.creatinine_clearance.normal.female
         end
-        creatinine_clearance = rand(range.first..range.last)
+        creatinine_clearance = rand(range.first..range.last).to_f
         metabolic_panel[:creatinine] = begin
                                          reverse_calculate_creatine(entity, creatinine_clearance)
                                        rescue
                                          1.0
                                        end
         range = Synthea::Config.metabolic.basic_panel.microalbumin_creatine_ratio.normal
-        entity.set_vital_sign(:microalbumin_creatine_ratio, rand(range.first..range.last), 'mg/g')
+        entity.set_vital_sign(:microalbumin_creatine_ratio, rand(range.first..range.last).to_f, 'mg/g')
         if creatinine_clearance > 60
           entity.set_vital_sign(:egfr, 60, 'mL/min/{1.73_m2}')
         else
@@ -311,7 +311,7 @@ module Synthea
                 else
                   microalbumin_creatine_ratio.normal
                 end
-        entity.set_vital_sign(:microalbumin_creatine_ratio, rand(range.first..range.last), 'mg/g')
+        entity.set_vital_sign(:microalbumin_creatine_ratio, rand(range.first..range.last).to_f, 'mg/g')
       end
 
       def blood_glucose(bmi, prediabetes, diabetes)
@@ -325,9 +325,9 @@ module Synthea
           end
           # very simple BMI function so that BMI 40 --> blood glucose ~ 10, but with a bounded min at 6.6 and bounded max at 12.0
         elsif prediabetes
-          rand(5.8..6.4)
+          rand(5.8..6.4).to_f
         else
-          rand(5.0..5.7)
+          rand(5.0..5.7).to_f
         end
       end
 

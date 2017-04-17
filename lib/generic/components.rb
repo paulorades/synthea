@@ -16,7 +16,7 @@ module Synthea
         required_field and: [:low, :high]
 
         def value
-          rand(low..high)
+          rand(low..high).to_i
         end
       end
 
@@ -25,7 +25,7 @@ module Synthea
         required_field :unit
 
         def value
-          rand(low.send(unit)..high.send(unit))
+          rand(low.send(unit)..high.send(unit)).to_i
         end
       end
 

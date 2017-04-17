@@ -197,9 +197,9 @@ module Synthea
           if @expiration.nil?
             if !@range.nil?
               # choose a random duration within the specified range
-              @expiration = @range.value.since(@start_time)
+              @expiration = @start_time + @range.value
             elsif !@exact.nil?
-              @expiration = @exact.value.since(@start_time)
+              @expiration = @start_time + @exact.value
             else
               @expiration = @start_time
             end
@@ -563,7 +563,7 @@ module Synthea
           operate(time, entity) if !@performed && concurrent_with_target_encounter(time)
           if @duration
             # choose a random duration within the specified range
-            @expiration ||= @duration.value.since(@start_time)
+            @expiration ||= @start_time + @duration.value
             time >= @expiration
           else
             true
@@ -740,9 +740,9 @@ module Synthea
 
         def process(time, entity)
           if @range
-            value = @range.value.since(time)
+            value = time + @range.value
           elsif @exact
-            value = @exact.value.since(time)
+            value = time + @exact.value
           end
 
           # this is the same as the ConditionEnd logic, maybe we want to extract this somewhere
