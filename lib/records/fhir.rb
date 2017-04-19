@@ -763,9 +763,8 @@ module Synthea
           get_time_from_fhir_datetime(resource.onsetDateTime || resource.assertedDate)
         when 'Organization'
           nil
-        else
-          nil
         end
+        nil
       end
     end
   end

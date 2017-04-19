@@ -106,7 +106,7 @@ module Synthea
         cost
       end
 
-      def render_timelines(filename='output/linegraph.png')
+      def render_timelines(filename = 'output/linegraph.png')
         puts "Generating #{filename}..."
         graph = Gruff::Line.new
         graph.title = 'Monte Carlo Patient Simulation'
