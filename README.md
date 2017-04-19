@@ -19,9 +19,11 @@ Currently, Synthea features:
 
 ## Quick Start
 
+The following instructions can be used to quickly install and execute Synthea. For more detailed instructions, including platform specific notes, see our [Getting Started](https://github.com/synthetichealth/synthea/wiki/Getting-Started) guide in the project wiki.
+
 ### Installation
 
-**System Requirements:** 
+**System Requirements:**
 Synthea requires Ruby 2.0.0 or above.
 
 To clone the Synthea repo and install the necessary gems:
@@ -45,7 +47,7 @@ Or generating the population for a county and time based on census statistics...
 bundle exec rake synthea:generate['./config/Suffolk_County.json']
 ```
 
-Some settings can be changed in `./config/synthea.yml`.
+Some settings can be changed in `./config/synthea.yml`. See the [Configuring Synthea](https://github.com/synthetichealth/synthea/wiki/Getting-Started#configuring-synthea) section in our project wiki.
 
 Synthea will output patient records in C-CDA (requires running instance of Mongo DB) and FHIR STU3 formats in `./output`.
 
