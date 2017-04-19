@@ -36,6 +36,18 @@ namespace :synthea do
     puts 'Finished.'
   end
 
+  desc 'monte carlo one patient repeatedly'
+  task :montecarlo, [] do |_t, _args|
+    start = Time.now
+    world = Synthea::World::MonteCarlo.new
+    world.run
+    finish = Time.now
+    minutes = ((finish - start) / 60)
+    seconds = (minutes - minutes.floor) * 60
+    puts "Completed in #{minutes.floor} minute(s) #{seconds.floor} second(s)."
+    puts 'Finished.'
+  end
+
   desc 'sequential generation, one patient at a time'
   task :generate, [:datafile] do |_t, args|
     args.with_defaults(datafile: nil)
