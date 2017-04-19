@@ -729,6 +729,44 @@ module Synthea
         end
         raise "#{unit} is not a recognized unit of time"
       end
+
+      def self.get_time_from_fhir_date(date)
+        token = date.split('-')
+        Time.new(token[0], token[1], token[2])
+      end
+
+      def self.get_time_from_fhir_datetime(datetime)
+        token = datetime.split(/-|T|:/)
+        zone = datetime[-6..-1]
+        Time.new(token[0], token[1], token[2], token[3], token[4], token[5], zone)
+      end
+
+      def self.get_date_time(resource)
+        case resource.resourceType
+        when 'Patient'
+          get_time_from_fhir_date(resource.birthDate)
+        when 'Encounter'
+          get_time_from_fhir_datetime(resource.period.start)
+        when 'CarePlan'
+          get_time_from_fhir_date(resource.period.start)
+        when 'Observation', 'DiagnosticReport'
+          get_time_from_fhir_datetime(resource.effectiveDateTime)
+        when 'Procedure'
+          get_time_from_fhir_datetime(resource.performedDateTime || resource.performedPeriod.start)
+        when 'Immunization'
+          get_time_from_fhir_datetime(resource.date)
+        when 'Condition'
+          get_time_from_fhir_datetime(resource.onsetDateTime)
+        when 'MedicationRequest'
+          get_time_from_fhir_date(resource.dateWritten)
+        when 'AllergyIntolerance'
+          get_time_from_fhir_datetime(resource.onsetDateTime || resource.assertedDate)
+        when 'Organization'
+          nil
+        else
+          nil
+        end
+      end
     end
   end
 end
