@@ -764,7 +764,6 @@ module Synthea
         when 'Organization'
           nil
         end
-        nil
       end
     end
   end

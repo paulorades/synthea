@@ -113,6 +113,48 @@ namespace :synthea do
     end
   end
 
+  desc 'patient-only upload to FHIR server'
+  task :patientup, [:url] do |_t, args|
+    FHIR.logger.level = Logger::FATAL
+    output = Synthea::Output::Exporter.get_output_folder('fhir')
+    if File.exist? output
+      start = Time.now
+      files = File.join(output, '**', '*.json')
+      client = FHIR::Client.new(args.url)
+      client.default_format = FHIR::Formats::ResourceFormat::RESOURCE_JSON
+      puts 'Uploading Patient resources...'
+      count = 0
+      observations = 0
+      Dir.glob(files).each do |file|
+        json = File.open(file, 'r:UTF-8', &:read)
+        bundle = FHIR.from_contents(json)
+        patient = bundle.entry.first.resource
+        patient.photo = nil
+        reply = client.create(patient)
+        count += 1
+        bundle.entry.each do |entry|
+          if entry.resource.resourceType == 'Observation'
+            entry.resource.subject.reference = "Patient/#{reply.resource.id}"
+            client.create(entry.resource)
+            observations += 1
+          end
+        end
+      end
+      finish = Time.now
+      minutes = ((finish - start) / 60)
+      seconds = (minutes - minutes.floor) * 60
+      each_time = ((finish - start) / count)
+      each_minutes = each_time / 60
+      each_seconds = (each_minutes - each_minutes.floor) * 60
+      puts "Created #{count} Patient records with #{observations} Observations."
+      puts "Completed in #{minutes.floor} minute(s) #{seconds.floor} second(s)."
+      puts "Average time per record: #{each_minutes.floor} minute(s) #{each_seconds.floor} second(s)."
+    else
+      puts 'No FHIR patient records have been generated yet.'
+      puts 'Run synthea:generate task.'
+    end
+  end
+
   # enter host name as command line argument to rake task
   desc 'upload CCDA records using sftp'
   task :ccdaupload, [:url] do |_t, args|
